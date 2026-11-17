@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+build/
+dist/
+build_tools/
+*.spec
+
+# 运行生成 / 用户数据
+删除记录.csv
+检测结果.csv
+检测摘要.txt
+视频检测报告.csv
+视频检测报告_摘要.txt
+视频隔离记录.csv
+违禁词隔离区_*/
+视频隔离区_*/
+settings.json
+
+# 打包产物（用 GitHub Releases 发布）
+安装包/
+存档/
+*.exe
+
+# 旧版独立工具
+TXT违禁词检测工具/
+
+# 编辑器
+.vscode/
+.idea/
+*.log
