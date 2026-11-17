@@ -1,10 +1,11 @@
 # 小工作箱
 
-一个 Windows 桌面小工具，把三件事放在同一个窗口里：
+一个 Windows 桌面小工具，把四件事放在同一个窗口里：
 
 1. **小说合并**：扫描多个小说文件夹，把内容相同或高度相似、只是文件名/版本不同的 TXT 合并为一本，输出到最终文件夹。
 2. **违禁词检测**：扫描合并结果或任意 TXT，按词库列出命中词、次数和行号；命中文件默认移入隔离区，不自动永久删除。
 3. **MP4 去重**：扫描视频文件夹，把同名、同时长、同画幅的不同清晰度版本合并，保留分辨率/码率更高的一份；不拼接视频。
+4. **书源阅读**：按 legado 小说书源（JSON）搜索、加书架、看目录、读正文、缓存全本；站点规则全部在书源配置里，程序本体只负责 UI、书架、缓存和任务调度。
 
 默认只读处理源文件。只有你明确点击“隔离/永久删除”并二次确认后，工具才会移动或删除命中文件。
 
@@ -12,12 +13,14 @@
 
 - 左侧为图标 + 文字导航，点顶部 `«` 可折叠为仅图标；
 - 首页是工具卡片网格，点击卡片打开对应工具；
-- 工具页以多 Tab 打开，可同时保留小说合并、违禁词检测、MP4 去重的工作状态；
+- 工具页以多 Tab 打开，可同时保留小说合并、违禁词检测、MP4 去重、书源阅读的工作状态；
 - 每个工具右侧的 `☆` 可收藏，收藏和最近使用会固定显示在侧栏顶部；
 - 首次启动不预填文件路径；选择过的路径会保存到 `%APPDATA%\小工作箱\settings.json`，下次自动恢复。
 - 违禁词检测页提供 **标准词库 → 现场编辑**，可直接在程序内增删违禁词。
 
 ![首页工具卡片](docs/screenshot-home.png)
+
+![书源阅读](docs/screenshot-book.png)
 
 ![侧边栏折叠](docs/screenshot-collapsed.png)
 
@@ -41,6 +44,8 @@
 > 安装包目前没有代码签名，Windows 可能显示 SmartScreen 提示。点击“更多信息 → 仍要运行”即可。程序完全在本地运行，不上传文件。
 >
 > v1.3.1 已改用 NSIS 安装器，不再依赖系统临时目录，避免部分电脑因 Temp 权限异常出现“无法创建目录”的错误。
+>
+> 安装包 v1.3.1 不包含书源阅读；书源阅读在源码版 v1.4.0 中提供。
 
 ## 源码 / 便携启动
 
@@ -60,7 +65,8 @@ python novel_toolbox.py
 
 - Windows 10 / 11
 - Python 3.10 或更高版本（安装时勾选 Add Python to PATH）
-- 不需要安装第三方库；Tkinter 随 Python 提供
+- 小说合并 / 违禁词 / MP4 去重不需要第三方库；Tkinter 随 Python 提供
+- 书源阅读另需 `requirements-book-source.txt`（pythonmonkey、lxml 等），不装不影响其它工具
 
 安装版已经内置 Python 运行时，不需要额外安装 Python。
 
@@ -179,6 +185,69 @@ python novel_toolbox.py
 视频隔离记录.csv
 ```
 
+### ④ 书源阅读
+
+书源阅读把「站点怎么抓、怎么解析」放进独立的 legado 书源 JSON，程序只负责搜索、
+书架、目录、正文、缓存和界面。详细设计见 [docs/书源引擎设计.md](docs/书源引擎设计.md)。
+
+**先安装可选依赖**（只影响书源阅读，其它工具仍不需要第三方库）：
+
+```powershell
+python -m pip install -r requirements-book-source.txt
+```
+
+1. 打开左侧「书源阅读」；
+2. 点 **书源管理 → 导入文件 / 从链接导入 / 从剪贴板导入**，选择 legado 书源 JSON
+   （数组、单个对象、`{"bookSources":[...]}` 都支持）；
+3. 输入关键词，选择「全部书源」或单个书源，点「搜索」；
+4. 有 `exploreUrl` 的书源可点 **发现**，选择分类/榜单后再双击结果；
+5. 双击搜索结果打开书籍，右侧加载详情与目录；双击目录章节开始阅读；
+6. 点 **加书架** 保存目录和进度；下次从书架双击即可继续；
+7. 点 **缓存** 把当前书的所有章节正文缓存到本地（按钮会变成「停止缓存」）；
+8. 正文右上角 `A-` / `A+` 调字号，设置会记住。
+
+没有现成书源时，点 **示例站点**：程序会在本机启动一个演示网站（127.0.0.1:8765），
+并导入 HTML、JSON、正则三个示例书源，可以完整走一遍搜索、目录、分页正文和缓存。
+示例站点只在本机运行，不访问外网。
+
+> 已用源仓库中带 `jsLib`、`exploreUrl`、POST 搜索、章节 token 解密的真实书源验证：
+> 搜索、详情、目录（538 章）、正文解密与 HTML 清洗均可正常完成。
+
+![书源管理](docs/screenshot-sources.png)
+
+书源管理还支持：
+
+- **编辑**：直接改 JSON，保存前校验；
+- **测试**：输入关键词，显示该源返回的书名和数量；
+- **启用/停用**、**删除**、**导出全部**。
+
+书源规则支持 legado 小说书源的主要语法：
+
+- 默认规则：`class.book-list@tag.li@tag.a@text`、`id.content@html`；
+- `@CSS:`、`@XPath:`、`@Json:`、`@js:`、`:正则`（列表规则，字段用 `$1`）；
+- `&&` 连接、`||` 第一个非空、`%%` 按索引交错、`##正则##替换`；
+- `@put:{key: 规则}` / `@get:{key}` / `{{key}}` / `{{page}}`；
+- `bookList`、`chapterList` 的 `-` 前缀反转；
+- URL 的 `<1,2,3>` 页码选择与 `,{...}` 请求选项（method/body/headers/retry）；
+- 书源自带的 `jsLib` 公共函数、`exploreUrl` 的 `@js:` 分类/榜单生成、`concurrentRate` 限速；
+- `source.get/put/getVariable`、`cookie.*`、`cache.*` 等 legado JS 常用对象；
+- 书源规则里的旧域名/镜像域名连接失败时，自动改用书源自身域名重试一次；
+- 部分站点会 reset 普通 GET，自动改用无 body 的 POST 重试。
+
+存储位置：
+
+```text
+%APPDATA%\小工作箱\书源\
+├── sources.json      书源
+├── bookshelf.json    书架、目录、进度
+├── cache\            章节正文缓存
+└── settings.json     字号等阅读设置
+```
+
+> 书源里的 JS 是可执行配置，和 legado 一样只应导入可信来源。
+>
+> 当前安装包 v1.3.1 尚未包含书源阅读；书源阅读在源码版 v1.4.0 中提供。
+
 ## 文件说明
 
 | 文件 | 用途 |
@@ -189,6 +258,11 @@ python novel_toolbox.py
 | `启动小工作箱.bat` | 源码版双击启动（无控制台窗口） |
 | `app.ico` | 程序图标 |
 | `assets/` | 侧栏图标和 Logo |
+| `book_source/` | 书源引擎：网络、JS、规则、解析、书架、缓存、任务队列、书源阅读页 |
+| `书源示例/` | 三个可直接导入的示例书源（HTML / JSON / 正则） |
+| `requirements-book-source.txt` | 书源阅读的可选依赖 |
+| `test_book_source.py` | 书源引擎端到端测试 |
+| `docs/书源引擎设计.md` | 分层、规则语法、数据格式与边界说明 |
 | `novel_merger.py` | 小说合并去重核心，也可单独用命令行 |
 | `word_checker.py` | 违禁词检测核心 |
 | `video_merger.py` | MP4 去重核心（内置 MP4 元数据解析，无需 ffmpeg） |
@@ -248,11 +322,12 @@ python novel_merger.py --recursive
 - 永久删除需要勾选选项并两次确认；
 - MP4 去重默认只复制，不拼接视频；只有主动点击“隔离重复视频”并确认后，重复文件才会被移动到隔离区；
 - 所有隔离/删除记录都会写入 `删除记录.csv`。
+- 书源里的 JS 属于可执行配置，只应导入可信来源；示例站点只监听 `127.0.0.1`。
 
 ## 运行测试
 
 ```powershell
-python -m unittest -v test_novel_merger.py test_word_checker.py test_video_merger.py test_file_renamer.py
+python -m unittest -v test_novel_merger.py test_word_checker.py test_video_merger.py test_file_renamer.py test_book_source.py
 ```
 
 测试覆盖：
@@ -263,4 +338,6 @@ python -m unittest -v test_novel_merger.py test_word_checker.py test_video_merge
 - 违禁词大小写、长词优先、报告排除自身、行号统计、隔离与永久删除；
 - MP4 元数据解析、完全相同去重、不同清晰度择优、不同集数不合并、无元数据时只按哈希判重；
 - MP4 预览检测报告、重复视频隔离、隔离日志；
-- MP4 文件名删除指定文字、重名冲突处理、改名报告。
+- MP4 文件名删除指定文字、重名冲突处理、改名报告；
+- 书源默认规则、CSS、XPath、JSONPath、正则列表、`&&/||/##/@put/@get`、
+  `@js:` + `java.ajax`、GBK、gzip、目录分页、正文分页、书架与章节缓存。

@@ -43,7 +43,7 @@ else:
     BASE_DIR = Path(__file__).resolve().parent
     RESOURCE_DIR = BASE_DIR
 ASSETS_DIR = RESOURCE_DIR / "assets"
-APP_VERSION = "1.3.1"
+APP_VERSION = "1.4.0"
 
 BG = "#f3f6fb"
 CARD = "#ffffff"
@@ -107,6 +107,14 @@ TOOL_SPECS = {
         "desc": "识别同名、同时长、同画幅的视频，保留更高清的版本",
         "points": "清晰度择优\n检测报告\n视频隔离区\n文件名清理",
     },
+    "book": {
+        "title": "书源阅读",
+        "subtitle": "legado 书源聚合",
+        "icon": "nav-book.png",
+        "card_icon": "card-book.png",
+        "desc": "搜索、书架、目录、正文与缓存；站点规则全部放在独立书源 JSON 里",
+        "points": "legado 规则语法\n内置 JS 引擎\n书架与章节缓存\n多源并发搜索",
+    },
 }
 
 PAGE_INFO = {
@@ -114,6 +122,7 @@ PAGE_INFO = {
     "merge": ("小说合并", TOOL_SPECS["merge"]["desc"]),
     "check": ("违禁词检测", TOOL_SPECS["check"]["desc"]),
     "video": ("MP4 去重", TOOL_SPECS["video"]["desc"]),
+    "book": ("书源阅读", TOOL_SPECS["book"]["desc"]),
 }
 
 
@@ -229,7 +238,7 @@ class NovelToolbox:
     # 外观
     # ------------------------------------------------------------------
     def _configure_window(self) -> None:
-        self.root.title("小工作箱 · 小说 / 视频 / 违禁词")
+        self.root.title("小工作箱 · 小说 / 视频 / 违禁词 / 书源")
         self.root.configure(bg=BG)
         icon = RESOURCE_DIR / "app.ico"
         if icon.exists():
@@ -351,7 +360,8 @@ class NovelToolbox:
         self.merge_tab = tk.Frame(self.page_host, bg=BG)
         self.check_tab = tk.Frame(self.page_host, bg=BG)
         self.video_tab = tk.Frame(self.page_host, bg=BG)
-        for page in (self.home_tab, self.merge_tab, self.check_tab, self.video_tab):
+        self.book_tab = tk.Frame(self.page_host, bg=BG)
+        for page in (self.home_tab, self.merge_tab, self.check_tab, self.video_tab, self.book_tab):
             page.grid(row=0, column=0, sticky="nsew")
             page.grid_remove()
         self.pages = {
@@ -359,11 +369,13 @@ class NovelToolbox:
             "merge": self.merge_tab,
             "check": self.check_tab,
             "video": self.video_tab,
+            "book": self.book_tab,
         }
         self._build_home_tab()
         self._build_merge_tab()
         self._build_check_tab()
         self._build_video_tab()
+        self._build_book_tab()
 
         footer = tk.Frame(main, bg=BG)
         footer.grid(row=3, column=0, sticky="ew", padx=22, pady=(0, 8))
@@ -690,11 +702,11 @@ class NovelToolbox:
         hero = tk.Frame(wrap, bg="#0f172a", padx=26, pady=20)
         hero.grid(row=0, column=0, sticky="ew", pady=(0, 16))
         hero.columnconfigure(0, weight=1)
-        tk.Label(hero, text="一个窗口，处理三类文件", bg="#0f172a", fg="#ffffff",
+        tk.Label(hero, text="一个窗口，处理小说、视频与书源", bg="#0f172a", fg="#ffffff",
                  font=(self.font_family, 18, "bold")).grid(row=0, column=0, sticky="w")
         tk.Label(
             hero,
-            text="小说 TXT · 违禁词 · MP4 视频。所有处理都在本机完成，文件不会上传。",
+            text="小说 TXT · 违禁词 · MP4 视频 · 书源阅读。所有处理都在本机完成，文件不会上传。",
             bg="#0f172a", fg="#94a3b8", font=(self.font_family, 9),
         ).grid(row=1, column=0, sticky="w", pady=(4, 0))
         tk.Label(
@@ -703,21 +715,25 @@ class NovelToolbox:
         ).grid(row=0, column=1, rowspan=2, sticky="e", padx=(20, 0))
 
         grid = tk.Frame(wrap, bg=BG)
-        grid.grid(row=1, column=0, sticky="nsew")
-        for index in range(3):
-            grid.columnconfigure(index, weight=1, uniform="tool")
+        grid.grid(row=1, column=0, sticky="n")
+        for index in range(2):
+            grid.columnconfigure(index, weight=0, uniform="tool")
         self.home_card_stars: dict[str, tk.Label] = {}
         self.home_cards: dict[str, tk.Frame] = {}
-        for index, key in enumerate(("merge", "check", "video")):
+        for index, key in enumerate(("merge", "check", "video", "book")):
             spec = TOOL_SPECS[key]
+            row, column = divmod(index, 2)
             card = tk.Frame(
                 grid, bg=CARD, highlightbackground=BORDER,
                 highlightthickness=1, cursor="hand2", padx=18, pady=16,
             )
-            card.grid(row=0, column=index, sticky="nsew",
-                      padx=(0 if index == 0 else 8, 0 if index == 2 else 8))
+            card.grid(
+                row=row, column=column, sticky="nw",
+                padx=(0 if column == 0 else 8, 0 if column == 1 else 8),
+                pady=(0, 8),
+            )
             card.grid_propagate(False)
-            card.configure(width=320, height=255)
+            card.configure(width=320, height=275)
             self.home_cards[key] = card
             image = None
             try:
@@ -1694,6 +1710,32 @@ class NovelToolbox:
             self.merge_threshold_label.set(f"{float(value):.2f}")
         except ValueError:
             pass
+
+    # ------------------------------------------------------------------
+    # 书源阅读
+    # ------------------------------------------------------------------
+    def _build_book_tab(self) -> None:
+        try:
+            from book_source.ui import BookSourcePage
+        except Exception as exc:  # 可选依赖缺失时不影响其它工具
+            frame = tk.Frame(self.book_tab, bg=BG)
+            frame.pack(fill="both", expand=True, padx=24, pady=24)
+            tk.Label(
+                frame, text="书源阅读需要额外的解析/JS 组件", bg=BG, fg=TEXT,
+                font=(self.font_family, 15, "bold"),
+            ).pack(anchor="w")
+            tk.Label(
+                frame,
+                text=(
+                    "书源规则需要真实 JS 引擎与 HTML 解析器。请在本机执行：\n\n"
+                    "python -m pip install pythonmonkey lxml cssselect jsonpath-ng\n\n"
+                    f"当前错误：{exc}"
+                ),
+                bg=BG, fg=MUTED, font=(self.font_family, 10), justify="left",
+            ).pack(anchor="w", pady=(10, 0))
+            return
+        self.book_page = BookSourcePage(self.book_tab, self)
+        self.book_page.pack(fill="both", expand=True)
 
     # ------------------------------------------------------------------
     # 任务线程

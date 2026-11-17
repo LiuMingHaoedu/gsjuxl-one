@@ -1,0 +1,37 @@
+{
+  "bookSourceName": "内置示例 · JSON 接口",
+  "bookSourceUrl": "http://127.0.0.1:8765/json",
+  "bookSourceGroup": "示例",
+  "bookSourceType": 0,
+  "bookSourceComment": "搜索走 JSON 接口，详情/目录/正文仍走 HTML，演示 @js 与 JSONPath 混用。",
+  "enabled": true,
+  "enabledExplore": false,
+  "searchUrl": "/api/search?q={{key}}&page={{page}}",
+  "ruleSearch": {
+    "bookList": "$.data.books",
+    "name": "name",
+    "author": "author",
+    "bookUrl": "@js:'/book/' + result.id + '.html'",
+    "coverUrl": "cover",
+    "intro": "intro",
+    "lastChapter": "lastChapter",
+    "wordCount": "@js:result.name.length * 1000"
+  },
+  "ruleBookInfo": {
+    "name": "id.book-info@tag.h1@text",
+    "author": "id.book-info@tag.span.author@text",
+    "intro": "id.book-intro@text",
+    "coverUrl": "id.book-cover@src",
+    "tocUrl": "id.toc-link@href"
+  },
+  "ruleToc": {
+    "chapterList": "id.chapter-list@tag.li",
+    "chapterName": "tag.a@text",
+    "chapterUrl": "tag.a@href",
+    "nextTocUrl": "id.next-page@href"
+  },
+  "ruleContent": {
+    "content": "id.chapter-content@html",
+    "nextContentUrl": "id.next-page@href"
+  }
+}

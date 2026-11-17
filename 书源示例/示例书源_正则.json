@@ -1,0 +1,33 @@
+{
+  "bookSourceName": "内置示例 · 正则列表",
+  "bookSourceUrl": "http://127.0.0.1:8765/regex",
+  "bookSourceGroup": "示例",
+  "bookSourceType": 0,
+  "bookSourceComment": "bookList 使用 :正则，字段用 $1/$2/$3 取分组。",
+  "enabled": true,
+  "enabledExplore": false,
+  "searchUrl": "/regex-search?q={{key}}",
+  "ruleSearch": {
+    "bookList": ":<li>\\s*<a href=\"(/book/\\d+\\.html)\">([^<]+)</a>\\s*<em>([^<]+)</em>",
+    "name": "$2",
+    "author": "$3",
+    "bookUrl": "$1"
+  },
+  "ruleBookInfo": {
+    "name": "id.book-info@tag.h1@text",
+    "author": "id.book-info@tag.span.author@text",
+    "intro": "id.book-intro@text",
+    "coverUrl": "id.book-cover@src",
+    "tocUrl": "id.toc-link@href"
+  },
+  "ruleToc": {
+    "chapterList": "id.chapter-list@tag.li",
+    "chapterName": "tag.a@text",
+    "chapterUrl": "tag.a@href",
+    "nextTocUrl": "id.next-page@href"
+  },
+  "ruleContent": {
+    "content": "id.chapter-content@html",
+    "nextContentUrl": "id.next-page@href"
+  }
+}

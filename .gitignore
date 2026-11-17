@@ -32,3 +32,7 @@ TXT违禁词检测工具/
 .vscode/
 .idea/
 *.log
+
+# 参考源码（legado 本地副本）
+.legado_src/
+legado-with-MD3-main/

@@ -1,0 +1,38 @@
+{
+  "bookSourceName": "内置示例 · HTML",
+  "bookSourceUrl": "http://127.0.0.1:8765/html",
+  "bookSourceGroup": "示例",
+  "bookSourceType": 0,
+  "bookSourceComment": "小工作箱内置示例站点，覆盖默认规则、CSS、XPath、分页与正文分页。",
+  "enabled": true,
+  "enabledExplore": false,
+  "header": "",
+  "searchUrl": "/search?q={{key}}&page={{page}}",
+  "ruleSearch": {
+    "bookList": "class.book-item",
+    "name": "class.book-name@text",
+    "author": "class.author@text",
+    "bookUrl": "class.book-link@href",
+    "coverUrl": "tag.img@src",
+    "intro": "class.intro@text",
+    "lastChapter": "class.latest@text"
+  },
+  "ruleBookInfo": {
+    "name": "id.book-info@tag.h1@text",
+    "author": "id.book-info@tag.span.author@text",
+    "intro": "id.book-intro@text",
+    "kind": "class.kind@text",
+    "coverUrl": "id.book-cover@src",
+    "tocUrl": "id.toc-link@href"
+  },
+  "ruleToc": {
+    "chapterList": "id.chapter-list@tag.li",
+    "chapterName": "tag.a@text",
+    "chapterUrl": "tag.a@href",
+    "nextTocUrl": "id.next-page@href"
+  },
+  "ruleContent": {
+    "content": "id.chapter-content@html",
+    "nextContentUrl": "id.next-page@href"
+  }
+}
