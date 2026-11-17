@@ -516,12 +516,30 @@ class BookSourcePage(tk.Frame):
             index = self.current_item.chapter_index if self.current_item.chapter_index >= 0 else 0
             if chapters:
                 self._load_chapter(index)
-        self._status(f"《{info.name}》共 {len(chapters)} 章")
+        hint = self._toc_gap_hint(chapters)
+        self._status(f"《{info.name}》共 {len(chapters)} 章" + (f"；{hint}" if hint else ""))
 
     def _book_failed(self, name: str, error: str) -> None:
         self._status(f"打开《{name}》失败：{error}")
         hint = self._network_hint(error)
         self._show_message(f"加载失败\n\n{error}" + (f"\n\n{hint}" if hint else ""))
+
+    @staticmethod
+    def _toc_gap_hint(chapters: list[Chapter]) -> str:
+        numbers: list[int] = []
+        for chapter in chapters:
+            match = re.search(r"第\s*(\d+)\s*[章回节话集]", chapter.title)
+            if match:
+                numbers.append(int(match.group(1)))
+        if len(numbers) < 3:
+            return ""
+        missing = sorted(set(range(min(numbers), max(numbers) + 1)) - set(numbers))
+        if not missing:
+            return ""
+        preview = "、".join(str(item) for item in missing[:6])
+        if len(missing) > 6:
+            preview += " 等"
+        return f"注意：源站目录缺少第 {preview} 章（不是程序漏抓）"
 
     def _network_hint(self, error: str) -> str:
         text = str(error)

@@ -212,6 +212,9 @@ python -m pip install -r requirements-book-source.txt
 
 > 已用源仓库中带 `jsLib`、`exploreUrl`、POST 搜索、章节 token 解密的真实书源验证：
 > 搜索、详情、目录（538 章）、正文解密与 HTML 清洗均可正常完成。
+>
+> 如果源站目录本身缺章（例如只公开部分章节），状态栏会提示“源站目录缺少第…章”，
+> 这不是程序漏抓；换一个包含完整目录的书源即可。
 
 ![书源管理](docs/screenshot-sources.png)
 

@@ -394,10 +394,12 @@ class RuleEngine:
         if match:
             index_text = match.group(2) if match.group(2) is not None else match.group(3)
         index = int(index_text) if index_text is not None else None
-        exclude: int | None = None
-        exclude_match = re.search(r"!(-?\d+)$", selector)
+        exclude: set[int] | None = None
+        exclude_match = re.search(r"!(-?\d+(?::-?\d+)*)$", selector)
         if exclude_match:
-            exclude = int(exclude_match.group(1))
+            exclude = {
+                int(part) for part in exclude_match.group(1).split(":") if part
+            }
             selector = selector[: exclude_match.start()].strip()
 
         results: list[Any] = []
@@ -411,9 +413,15 @@ class RuleEngine:
                     selected = [selected[index]]
                 else:
                     selected = []
-            elif exclude is not None and -len(selected) <= exclude < len(selected):
+            elif exclude and selected:
+                length = len(selected)
                 selected = [
-                    item for offset, item in enumerate(selected) if offset != exclude % len(selected)
+                    item
+                    for offset, item in enumerate(selected)
+                    if not any(
+                        (value % length if value < 0 else value) == offset
+                        for value in exclude
+                    )
                 ]
             for item in selected:
                 if id(item) not in seen:
